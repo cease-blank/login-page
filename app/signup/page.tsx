@@ -255,6 +255,7 @@ export default function SignupPage() {
                   <option>Germany</option>
                   <option>France</option>
                   <option>Australia</option>
+                  <option>Italy</option>
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#656d76]">
                   <svg
