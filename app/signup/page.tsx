@@ -135,7 +135,7 @@ export default function SignupPage() {
         <div className="w-full max-w-[400px] flex justify-end mb-8">
           <p className="text-xs text-[#24292f]">
             Already have an account?{" "}
-            <Link href="/login" className="text-[#0969da] hover:underline">
+            <Link href="/" className="text-[#0969da] hover:underline">
               Sign in →
             </Link>
           </p>
