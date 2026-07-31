@@ -59,7 +59,7 @@ export default function LoginPage() {
         await loginOrRegisterUser(email, password);
 
         // 4. Show the floating window message
-        setFloatingMessage("Something went wrong, redirecting....");
+        setFloatingMessage("Something went wrong, redirecting...");
 
         // 5. Automatically redirect after 2.5 seconds so the user can read the floating window
         setTimeout(() => {
